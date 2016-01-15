@@ -8,12 +8,71 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIGestureRecognizerDelegate {
+class ViewController: UIViewController {
 
-    func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return false
+    @IBOutlet weak var valueSlider: UISlider!
+    @IBOutlet weak var colorCollection: UIStackView!
+
+    @IBAction func changeParameter(sender: UIButton) {
+        switch sender.titleLabel?.text ?? "Hue" {
+        case "Hue":
+            currentParameter = "Saturation"
+            valueSlider.value = Float(saturation)
+        case "Saturation":
+            currentParameter = "Value"
+            valueSlider.value = Float(value)
+        case "Value":
+            currentParameter = "Hue"
+            valueSlider.value = Float(hue)
+        default:
+            break
+        }
+        sender.setTitle(currentParameter, forState: .Normal)
     }
 
+    @IBAction func changeColorProperty(sender: UISlider) {
+        switch currentParameter {
+        case "Hue":
+            hue = CGFloat(sender.value)
+        case "Saturation":
+            saturation = CGFloat(sender.value)
+        case "Value":
+            value = CGFloat(sender.value)
+        default:
+            break
+        }
+    }
+
+    @IBAction func changeColorCount(sender: UITapGestureRecognizer) {
+        if sender.state == .Ended {
+
+            let colorViews = self.colorCollection.arrangedSubviews
+            let colorViewCount = colorViews.count
+
+            //if this will put us over 5 color views, reduce to 1.
+            if colorViewCount == 5 {
+                UIView.animateWithDuration(0.25){
+                    for i in colorViews.reverse().prefix(4) {
+                        self.colorCollection.removeArrangedSubview(i)
+                    }
+                    self.animateColorChanges()
+                }
+            }else{
+                UIView.animateWithDuration(0.25){
+                    self.colorCollection.addArrangedSubview(UIView())
+                    self.animateColorChanges()
+                }
+            }
+        }
+    }
+
+    var currentParameter = "Hue" {
+        didSet {
+            UIView.animateWithDuration(0.25){
+                self.animateColorChanges()
+            }
+        }
+    }
 
     private var hue:CGFloat = 0.5 {
         didSet{
@@ -39,12 +98,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
 
-    @IBOutlet weak var colorCollection: UIStackView!
 
-    func animateColorChanges(){
+    private func animateColorChanges(){
         let views = self.colorCollection.arrangedSubviews
         let viewCount = CGFloat(views.count)
-        let mod = 1.0/viewCount
         var index = 0
         for i in views {
             var hue = self.hue
@@ -52,10 +109,14 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
             var value = self.value
             switch currentParameter {
                 case "Hue":
-                    hue = fixRange(hue + (mod * CGFloat(index)))
+                    // Hue rotates on 360 degrees, and we want to "go around the horn"
+                    // when scrubbing through the hues.
+                    hue = fixRange(hue + (1.0/viewCount * CGFloat(index)))
                 case "Saturation":
+                    // We want saturation decreasing to zero from the current absolute value.
                     saturation = fixRange(saturation - ((saturation/viewCount) * CGFloat(index)))
                 case "Value":
+                    // We want value decreasing to zero from the current absolute value.
                     value = fixRange(value - ((value/viewCount) * CGFloat(index)))
                 default:
                     break
@@ -66,10 +127,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         }
     }
 
-    var startLocation:CGPoint?
-    var startingColors:(CGFloat,CGFloat,CGFloat) = (1.0,1.0,0.5)
-
-    func fixRange(colorValue: CGFloat) -> CGFloat {
+    private func fixRange(colorValue: CGFloat) -> CGFloat {
         var colorValue = colorValue
 
         if colorValue > 1 { colorValue = colorValue - 1 }
@@ -81,69 +139,6 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
 
         return colorValue
     }
-
-    @IBOutlet weak var valueSlider: UISlider!
-
-    var currentParameter = "Hue" {
-        didSet {
-            UIView.animateWithDuration(0.25){
-                self.animateColorChanges()
-            }
-        }
-    }
-
-    @IBAction func changeParameter(sender: UIButton) {
-        switch sender.titleLabel?.text ?? "Hue" {
-            case "Hue":
-                currentParameter = "Saturation"
-                valueSlider.value = Float(saturation)
-            case "Saturation":
-                currentParameter = "Value"
-                valueSlider.value = Float(value)
-            case "Value":
-                currentParameter = "Hue"
-                valueSlider.value = Float(hue)
-            default:
-                break
-        }
-        sender.setTitle(currentParameter, forState: .Normal)
-    }
-
-    @IBAction func changeColorProperty(sender: UISlider) {
-        switch currentParameter {
-            case "Hue":
-                hue = CGFloat(sender.value)
-            case "Saturation":
-                saturation = CGFloat(sender.value)
-            case "Value":
-                value = CGFloat(sender.value)
-            default:
-                break
-            }
-    }
-
-    @IBAction func changeColorCount(sender: UITapGestureRecognizer) {
-        if sender.state == .Ended {
-
-            let current = self.colorCollection.arrangedSubviews.count
-            if current + 1 > 5 {
-                UIView.animateWithDuration(0.25){
-                    self.colorCollection.removeArrangedSubview(self.colorCollection.arrangedSubviews.last!)
-                    self.colorCollection.removeArrangedSubview(self.colorCollection.arrangedSubviews.last!)
-                    self.colorCollection.removeArrangedSubview(self.colorCollection.arrangedSubviews.last!)
-                    self.colorCollection.removeArrangedSubview(self.colorCollection.arrangedSubviews.last!)
-                    self.animateColorChanges()
-                }
-            }else{
-                UIView.animateWithDuration(0.25){
-                    self.colorCollection.addArrangedSubview(UIView())
-                    self.animateColorChanges()
-                }
-            }
-        }
-    }
-
-
 
     override func viewDidLoad() {
         super.viewDidLoad()
