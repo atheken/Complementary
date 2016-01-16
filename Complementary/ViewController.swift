@@ -51,16 +51,16 @@ class ViewController: UIViewController {
 
             //if this will put us over 5 color views, reduce to 1.
             if colorViewCount == 5 {
-                UIView.animateWithDuration(0.25){
+                animate{
                     for i in colorViews.reverse().prefix(4) {
                         self.colorCollection.removeArrangedSubview(i)
                     }
-                    self.animateColorChanges()
+                    self.applyColorChanges()
                 }
             }else{
-                UIView.animateWithDuration(0.25){
+                animate{
                     self.colorCollection.addArrangedSubview(UIView())
-                    self.animateColorChanges()
+                    self.applyColorChanges()
                 }
             }
         }
@@ -68,38 +68,30 @@ class ViewController: UIViewController {
 
     var currentParameter = "Hue" {
         didSet {
-            UIView.animateWithDuration(0.25){
-                self.animateColorChanges()
-            }
+            animate{ self.applyColorChanges() }
         }
     }
 
     private var hue:CGFloat = 0.5 {
         didSet{
-            UIView.animateWithDuration(0.25){
-                self.animateColorChanges()
-            }
+            animate{ self.applyColorChanges() }
         }
     }
 
     private var value:CGFloat = 1.0 {
         didSet{
-            UIView.animateWithDuration(0.25){
-                self.animateColorChanges()
-            }
+            animate{ self.applyColorChanges() }
         }
     }
 
     private var saturation:CGFloat = 1.0 {
         didSet{
-            UIView.animateWithDuration(0.25){
-                self.animateColorChanges()
-            }
+            animate{ self.applyColorChanges() }
         }
     }
 
 
-    private func animateColorChanges(){
+    private func applyColorChanges(){
         let views = self.colorCollection.arrangedSubviews
         let viewCount = CGFloat(views.count)
         var index = 0
@@ -140,10 +132,15 @@ class ViewController: UIViewController {
         return colorValue
     }
 
+    // Standardizes the animation quality and makes a shorthand for executing them.
+    private func animate(animations:()->()){
+        UIView.animateWithDuration(0.25, animations: animations)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         self.colorCollection.addArrangedSubview(UIView())
-        self.animateColorChanges()
+        self.applyColorChanges()
     }
 }
 
